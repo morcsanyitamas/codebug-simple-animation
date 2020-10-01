@@ -1,10 +1,12 @@
 import codebug_tether
 import time
+from time_delay import TimeDelay, update_delay_time
+from button import PressedButtons, button_handler
 
-SLEEP_TIME_MIN = 0.1
-SLEEP_TIME_MAX = 1
-SLEEP_TIME_STEP = 0.1
-SLEEP_TIME = 0.5
+# SLEEP_TIME_MIN = 0.1
+# SLEEP_TIME_MAX = 1
+# SLEEP_TIME_STEP = 0.1
+# SLEEP_TIME = 0.5
 
 
 codebug = codebug_tether.CodeBug()
@@ -38,8 +40,16 @@ def set_horizontal():
     codebug.set_row(2, 0b11111)
 
 
+def get_delay_time(delay_time, pressed_buttons):
+    if pressed_buttons == PressedButtons.A:
+        return update_delay_time(delay_time, -TimeDelay.DELAY_STEP.value)
+    if pressed_buttons == PressedButtons.B:
+        return update_delay_time(delay_time, TimeDelay.DELAY_STEP.value)
+    return delay_time
+
+
 def main():
-    sleep_time = SLEEP_TIME
+    sleep_time = TimeDelay.MIN_DELAY.value
     try:
         while True:
             set_vertical()
@@ -50,12 +60,10 @@ def main():
             time.sleep(sleep_time)
             set_reverse_diagonal()
             time.sleep(sleep_time)
-            if codebug.get_input('A') == 1:
-                if (sleep_time - SLEEP_TIME_STEP) >= SLEEP_TIME_MIN:
-                    sleep_time -= SLEEP_TIME_STEP
-            if codebug.get_input('B') == 1:
-                if (sleep_time + SLEEP_TIME_STEP) <= SLEEP_TIME_MAX:
-                    sleep_time += SLEEP_TIME_STEP
+            pressed_buttons = button_handler(codebug)
+            sleep_time = get_delay_time(sleep_time, pressed_buttons)
+            # print(sleep_time)
+
     except KeyboardInterrupt:
         pass
 
